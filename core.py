@@ -5,6 +5,7 @@ class PysicWriterBase():
     def __init__(self):
         self.notes = []
         self.velocity = []
+        self.time = []
 
     def write(self, musicdata, path):
         pass
@@ -31,6 +32,29 @@ class SimplePysicWriter(PysicWriterBase):
             track.append(mido.Message('note_on', note=note, velocity=vel, time=150))
         for note, vel in zip(self.notes, self.velocity):
             track.append(mido.Message('note_off', note=note, velocity=vel, time=50))
+
+        mid.save(path)
+
+
+class SinglePysicWriter(PysicWriterBase):
+    def __init__(self, diff):
+        super().__init__()
+        self.diff = diff
+
+    def write(self, musicdata, path):
+        # length = len(musicdata)
+        mid = mido.MidiFile()
+        track = mido.MidiTrack()
+        mid.tracks.append(track)
+
+        track.append(mido.MetaMessage('set_tempo', tempo=1500000, time=0))
+        track.append(mido.MetaMessage('track_name', name='Piano 1', time=0))
+        track.append(mido.Message('program_change', program=1, time=0))
+
+        for ntime, note, stage in musicdata:
+            track.append(mido.Message('note_on', note=num2note(note, stage, self.diff), velocity=60, time=int(ntime * 10)))
+            track.append(mido.Message('note_off', note=num2note(note, stage, self.diff),
+                                      velocity=60, time=int(ntime * 200)))
 
         mid.save(path)
 
